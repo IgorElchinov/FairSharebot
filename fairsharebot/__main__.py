@@ -23,6 +23,7 @@ def main() -> None:
     init_db(settings.db_path)
 
     app = Application.builder().token(settings.bot_token).build()
+    app.bot_data["settings"] = settings
     register_handlers(app)
 
     logging.getLogger(__name__).info("FairSharebot starting (polling)...")
