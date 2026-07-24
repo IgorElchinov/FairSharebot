@@ -50,3 +50,12 @@ class SplitInput:
     user_id: int
     computed_amount_cents: int
     weight: float | None = None
+
+
+@dataclass(frozen=True)
+class Transfer:
+    """One suggested payment in a settlement plan: from_user_id owes to_user_id."""
+
+    from_user_id: int
+    to_user_id: int
+    amount_cents: int

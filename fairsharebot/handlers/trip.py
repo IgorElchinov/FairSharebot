@@ -5,9 +5,12 @@ from telegram.ext import ContextTypes
 
 from ..config import Settings
 from ..db.connection import get_connection
+from ..db.payments_repo import get_trip_payments, get_trip_splits
 from ..db.trips_repo import close_trip, create_trip
-from ..db.users_repo import upsert_chat_user, upsert_user
+from ..db.users_repo import get_display_names, upsert_chat_user, upsert_user
 from ..errors import NoOpenTripError, TripAlreadyOpenError
+from ..settlement import compute_balances, compute_transfers
+from ..utils.formatting import format_transfers
 
 
 def _default_trip_name(update: Update) -> str:
@@ -50,6 +53,16 @@ async def close_trip_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
             await update.message.reply_text("There's no open trip in this chat to close.")
             return
 
-    await update.message.reply_text(
-        f"Trip closed: {trip.name}\nSettlement is coming in a future update."
-    )
+        payments = get_trip_payments(conn, trip.id)
+        splits = get_trip_splits(conn, trip.id)
+        balances = compute_balances(payments, splits)
+        names = get_display_names(conn, balances.keys())
+
+    lines = [f"Trip closed: {trip.name}"]
+    if not payments:
+        lines.append("No payments were recorded.")
+    else:
+        lines.append("Final settlement:")
+        lines.append(format_transfers(compute_transfers(balances), names))
+
+    await update.message.reply_text("\n".join(lines))

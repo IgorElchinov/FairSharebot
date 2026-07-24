@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import sqlite3
 from datetime import datetime, timezone
+from typing import Iterable
 
 from ..models import User
 
@@ -60,3 +61,11 @@ def resolve_username(conn: sqlite3.Connection, *, chat_id: int, username: str) -
         (chat_id, normalized),
     ).fetchone()
     return _row_to_user(row) if row else None
+
+
+def get_display_names(conn: sqlite3.Connection, user_ids: Iterable[int]) -> dict[int, str]:
+    names: dict[int, str] = {}
+    for user_id in user_ids:
+        user = get_user(conn, user_id)
+        names[user_id] = user.display_name if user else f"user {user_id}"
+    return names
