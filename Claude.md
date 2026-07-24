@@ -2,4 +2,4 @@
 
 FairSharebot is lightweight easy-to-use telegram bot that manages your shared spendings during trips.
 
-This project is vibe-coded. [See PROMPTS.md for more details.](PROMPTS.md)
+See @IDEA.md for more details and make a plan of implementing the bot. 
