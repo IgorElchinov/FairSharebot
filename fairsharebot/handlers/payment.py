@@ -6,7 +6,7 @@ from telegram import Update
 from telegram import User as TgUser
 from telegram.ext import ContextTypes
 
-from ..activity_log import log_incoming, reply
+from ..activity_log import reply
 from ..config import Settings
 from ..db.connection import get_connection
 from ..db.payments_repo import add_payment, add_splits
@@ -61,7 +61,6 @@ def _custom_splits(
 
 
 async def pay_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    log_incoming(update)
     settings: Settings = context.bot_data["settings"]
     chat = update.effective_chat
     sender = update.effective_user

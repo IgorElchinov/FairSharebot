@@ -12,6 +12,12 @@ def _connect(db_path: Path) -> sqlite3.Connection:
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     conn.execute("PRAGMA journal_mode = WAL")
+    # SQLite allows only one writer at a time. The application is expected to
+    # process one update at a time (see handlers/__init__.py's comment on
+    # observe_message), so this is defense-in-depth, not the primary fix, for
+    # any writes that do briefly overlap: wait and retry for up to 5s instead
+    # of failing immediately with "database is locked".
+    conn.execute("PRAGMA busy_timeout = 5000")
     return conn
 
 
