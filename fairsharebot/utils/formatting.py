@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime
+
 from ..models import Transfer
 
 
@@ -7,6 +9,10 @@ def format_cents(cents: int) -> str:
     sign = "-" if cents < 0 else ""
     cents = abs(cents)
     return f"{sign}{cents // 100}.{cents % 100:02d}"
+
+
+def format_date(iso_timestamp: str) -> str:
+    return datetime.fromisoformat(iso_timestamp).strftime("%Y-%m-%d")
 
 
 def format_transfers(transfers: list[Transfer], names: dict[int, str]) -> str:

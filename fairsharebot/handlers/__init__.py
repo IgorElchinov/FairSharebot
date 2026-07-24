@@ -6,7 +6,7 @@ from .balance import balance_command
 from .observe import observe_message
 from .payment import pay_command
 from .start_help import help_command, start_command
-from .trip import close_trip_command, start_trip_command
+from .trip import close_trip_command, list_trips_command, start_trip_command, trip_detail_command
 
 
 def register_handlers(app: Application) -> None:
@@ -20,3 +20,5 @@ def register_handlers(app: Application) -> None:
     app.add_handler(CommandHandler("closetrip", close_trip_command))
     app.add_handler(CommandHandler("pay", pay_command))
     app.add_handler(CommandHandler("balance", balance_command))
+    app.add_handler(CommandHandler("trips", list_trips_command))
+    app.add_handler(CommandHandler("trip", trip_detail_command))

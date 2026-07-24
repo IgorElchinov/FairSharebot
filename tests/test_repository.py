@@ -4,7 +4,13 @@ import pytest
 
 from fairsharebot.db.connection import get_connection
 from fairsharebot.db.payments_repo import add_payment, add_splits, get_trip_payments, get_trip_splits
-from fairsharebot.db.trips_repo import close_trip, create_trip, get_open_trip, list_trips
+from fairsharebot.db.trips_repo import (
+    close_trip,
+    create_trip,
+    get_open_trip,
+    list_trips,
+    list_trips_with_totals,
+)
 from fairsharebot.db.users_repo import get_user, resolve_username, upsert_chat_user, upsert_user
 from fairsharebot.errors import NoOpenTripError, TripAlreadyOpenError
 from fairsharebot.models import SplitInput
@@ -170,3 +176,42 @@ def test_get_trip_payments_only_returns_that_trips_payments(db_path):
 
     assert [p.description for p in payments_a] == ["a"]
     assert [p.description for p in payments_b] == ["b"]
+
+
+def test_list_trips_with_totals(db_path):
+    with get_connection(db_path) as conn:
+        upsert_user(conn, user_id=1, username="alice", display_name="Alice")
+        trip_a = create_trip(conn, chat_id=100, name="Trip A", created_by=1)
+        add_payment(
+            conn,
+            trip_id=trip_a.id,
+            payer_id=1,
+            amount_cents=1000,
+            description="taxi",
+            split_type="equal",
+            created_by=1,
+        )
+        add_payment(
+            conn,
+            trip_id=trip_a.id,
+            payer_id=1,
+            amount_cents=500,
+            description="snacks",
+            split_type="equal",
+            created_by=1,
+        )
+        close_trip(conn, 100)
+        trip_b = create_trip(conn, chat_id=100, name="Trip B", created_by=1)
+
+    with get_connection(db_path) as conn:
+        results = list_trips_with_totals(conn, 100)
+
+    by_id = {trip.id: total for trip, total in results}
+    assert by_id[trip_a.id] == 1500
+    assert by_id[trip_b.id] == 0
+    assert [trip.id for trip, _ in results] == [trip_b.id, trip_a.id]
+
+
+def test_list_trips_with_totals_empty_for_unknown_chat(db_path):
+    with get_connection(db_path) as conn:
+        assert list_trips_with_totals(conn, 999) == []

@@ -70,3 +70,18 @@ def list_trips(conn: sqlite3.Connection, chat_id: int) -> list[Trip]:
         (chat_id,),
     ).fetchall()
     return [_row_to_trip(row) for row in rows]
+
+
+def list_trips_with_totals(conn: sqlite3.Connection, chat_id: int) -> list[tuple[Trip, int]]:
+    rows = conn.execute(
+        """
+        SELECT t.*, COALESCE(SUM(p.amount_cents), 0) AS total_cents
+        FROM trips t
+        LEFT JOIN payments p ON p.trip_id = t.id AND p.deleted_at IS NULL
+        WHERE t.chat_id = ?
+        GROUP BY t.id
+        ORDER BY t.id DESC
+        """,
+        (chat_id,),
+    ).fetchall()
+    return [(_row_to_trip(row), row["total_cents"]) for row in rows]

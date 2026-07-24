@@ -6,11 +6,11 @@ from telegram.ext import ContextTypes
 from ..config import Settings
 from ..db.connection import get_connection
 from ..db.payments_repo import get_trip_payments, get_trip_splits
-from ..db.trips_repo import close_trip, create_trip
+from ..db.trips_repo import close_trip, create_trip, get_trip, list_trips_with_totals
 from ..db.users_repo import get_display_names, upsert_chat_user, upsert_user
 from ..errors import NoOpenTripError, TripAlreadyOpenError
 from ..settlement import compute_balances, compute_transfers
-from ..utils.formatting import format_transfers
+from ..utils.formatting import format_cents, format_date, format_transfers
 
 
 def _default_trip_name(update: Update) -> str:
@@ -63,6 +63,70 @@ async def close_trip_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
         lines.append("No payments were recorded.")
     else:
         lines.append("Final settlement:")
+        lines.append(format_transfers(compute_transfers(balances), names))
+
+    await update.message.reply_text("\n".join(lines))
+
+
+async def list_trips_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    settings: Settings = context.bot_data["settings"]
+    chat = update.effective_chat
+
+    with get_connection(settings.db_path) as conn:
+        trips_with_totals = list_trips_with_totals(conn, chat.id)
+
+    if not trips_with_totals:
+        await update.message.reply_text("No trips yet in this chat. Start one with /starttrip.")
+        return
+
+    lines = ["Trips in this chat:"]
+    for trip, total_cents in trips_with_totals:
+        date_range = format_date(trip.created_at)
+        if trip.closed_at:
+            date_range += f" to {format_date(trip.closed_at)}"
+        lines.append(
+            f"#{trip.id} {trip.name} ({trip.status}) - {date_range} - total {format_cents(total_cents)}"
+        )
+    lines.append("")
+    lines.append("Use /trip <id> to see the full breakdown for a trip.")
+
+    await update.message.reply_text("\n".join(lines))
+
+
+async def trip_detail_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    settings: Settings = context.bot_data["settings"]
+    chat = update.effective_chat
+
+    if not context.args or not context.args[0].isdigit():
+        await update.message.reply_text("Usage: /trip <id> - see /trips for trip ids.")
+        return
+
+    trip_id = int(context.args[0])
+
+    with get_connection(settings.db_path) as conn:
+        trip = get_trip(conn, trip_id)
+        if trip is None or trip.chat_id != chat.id:
+            await update.message.reply_text(f"No trip #{trip_id} found in this chat. See /trips.")
+            return
+
+        payments = get_trip_payments(conn, trip.id)
+        splits = get_trip_splits(conn, trip.id)
+        balances = compute_balances(payments, splits)
+        names = get_display_names(conn, {p.payer_id for p in payments} | set(balances.keys()))
+
+    lines = [f"Trip #{trip.id}: {trip.name} ({trip.status})"]
+    if not payments:
+        lines.append("No payments were recorded.")
+    else:
+        lines.append("")
+        lines.append("Payments:")
+        for payment in payments:
+            payer_name = names[payment.payer_id]
+            description = payment.description or "(no description)"
+            lines.append(f"- {payer_name} paid {format_cents(payment.amount_cents)} for {description}")
+
+        lines.append("")
+        lines.append("Settlement:")
         lines.append(format_transfers(compute_transfers(balances), names))
 
     await update.message.reply_text("\n".join(lines))
