@@ -3,6 +3,7 @@ from __future__ import annotations
 from telegram import Update
 from telegram.ext import ContextTypes
 
+from ..activity_log import reply
 from ..config import Settings
 from ..db.connection import get_connection
 from ..db.payments_repo import get_trip_payments, get_trip_splits
@@ -31,14 +32,15 @@ async def start_trip_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
         try:
             trip = create_trip(conn, chat_id=chat.id, name=name, created_by=user.id)
         except TripAlreadyOpenError:
-            await update.message.reply_text(
-                "A trip is already open in this chat. Use /closetrip to close it first."
+            await reply(
+                update, "A trip is already open in this chat. Use /closetrip to close it first."
             )
             return
 
-    await update.message.reply_text(
+    await reply(
+        update,
         f"Trip started: {trip.name}\n"
-        "Record payments with /pay, then /closetrip when you're done."
+        "Record payments with /pay, then /closetrip when you're done.",
     )
 
 
@@ -50,7 +52,7 @@ async def close_trip_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
         try:
             trip = close_trip(conn, chat.id)
         except NoOpenTripError:
-            await update.message.reply_text("There's no open trip in this chat to close.")
+            await reply(update, "There's no open trip in this chat to close.")
             return
 
         payments = get_trip_payments(conn, trip.id)
@@ -65,7 +67,7 @@ async def close_trip_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
         lines.append("Final settlement:")
         lines.append(format_transfers(compute_transfers(balances), names))
 
-    await update.message.reply_text("\n".join(lines))
+    await reply(update, "\n".join(lines))
 
 
 async def list_trips_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -76,7 +78,7 @@ async def list_trips_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
         trips_with_totals = list_trips_with_totals(conn, chat.id)
 
     if not trips_with_totals:
-        await update.message.reply_text("No trips yet in this chat. Start one with /starttrip.")
+        await reply(update, "No trips yet in this chat. Start one with /starttrip.")
         return
 
     lines = ["Trips in this chat:"]
@@ -90,7 +92,7 @@ async def list_trips_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
     lines.append("")
     lines.append("Use /trip <id> to see the full breakdown for a trip.")
 
-    await update.message.reply_text("\n".join(lines))
+    await reply(update, "\n".join(lines))
 
 
 async def trip_detail_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -98,7 +100,7 @@ async def trip_detail_command(update: Update, context: ContextTypes.DEFAULT_TYPE
     chat = update.effective_chat
 
     if not context.args or not context.args[0].isdigit():
-        await update.message.reply_text("Usage: /trip <id> - see /trips for trip ids.")
+        await reply(update, "Usage: /trip <id> - see /trips for trip ids.")
         return
 
     trip_id = int(context.args[0])
@@ -106,7 +108,7 @@ async def trip_detail_command(update: Update, context: ContextTypes.DEFAULT_TYPE
     with get_connection(settings.db_path) as conn:
         trip = get_trip(conn, trip_id)
         if trip is None or trip.chat_id != chat.id:
-            await update.message.reply_text(f"No trip #{trip_id} found in this chat. See /trips.")
+            await reply(update, f"No trip #{trip_id} found in this chat. See /trips.")
             return
 
         payments = get_trip_payments(conn, trip.id)
@@ -129,4 +131,4 @@ async def trip_detail_command(update: Update, context: ContextTypes.DEFAULT_TYPE
         lines.append("Settlement:")
         lines.append(format_transfers(compute_transfers(balances), names))
 
-    await update.message.reply_text("\n".join(lines))
+    await reply(update, "\n".join(lines))

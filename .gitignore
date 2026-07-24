@@ -1,5 +1,7 @@
 .env
 data/
+logs/
+*.log
 *.sqlite3
 __pycache__/
 *.pyc

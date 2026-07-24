@@ -16,6 +16,7 @@ class Settings:
     bot_token: str
     db_path: Path
     log_level: str
+    log_dir: Path
 
 
 def load_settings(env_file: str | Path | None = ".env") -> Settings:
@@ -30,5 +31,6 @@ def load_settings(env_file: str | Path | None = ".env") -> Settings:
 
     db_path = Path(os.environ.get("DB_PATH", "./data/fairsharebot.sqlite3"))
     log_level = os.environ.get("LOG_LEVEL", "INFO")
+    log_dir = Path(os.environ.get("LOG_DIR", "./logs"))
 
-    return Settings(bot_token=bot_token, db_path=db_path, log_level=log_level)
+    return Settings(bot_token=bot_token, db_path=db_path, log_level=log_level, log_dir=log_dir)

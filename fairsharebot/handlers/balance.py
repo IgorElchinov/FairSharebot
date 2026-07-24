@@ -3,6 +3,7 @@ from __future__ import annotations
 from telegram import Update
 from telegram.ext import ContextTypes
 
+from ..activity_log import reply
 from ..config import Settings
 from ..db.connection import get_connection
 from ..db.payments_repo import get_trip_payments, get_trip_splits
@@ -19,9 +20,7 @@ async def balance_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     with get_connection(settings.db_path) as conn:
         trip = get_open_trip(conn, chat.id)
         if trip is None:
-            await update.message.reply_text(
-                "There's no open trip in this chat. Start one with /starttrip."
-            )
+            await reply(update, "There's no open trip in this chat. Start one with /starttrip.")
             return
 
         payments = get_trip_payments(conn, trip.id)
@@ -45,4 +44,4 @@ async def balance_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         lines.append("Suggested settlement (preview, trip is still open):")
         lines.append(format_transfers(compute_transfers(balances), names))
 
-    await update.message.reply_text("\n".join(lines))
+    await reply(update, "\n".join(lines))

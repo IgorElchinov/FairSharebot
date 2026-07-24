@@ -36,6 +36,23 @@ python -m fairsharebot
 This starts the bot with long polling - no public URL or webhook needed. A SQLite database
 is created automatically at `./data/fairsharebot.sqlite3` (configurable via `DB_PATH`).
 
+Logs are written both to the console and to `./logs/fairsharebot.log` (configurable via
+`LOG_DIR`), rotating at 5 MB with 5 backups kept. Check that file first if something goes
+wrong - errors from handlers (including the full traceback) always land there.
+
+Set `LOG_LEVEL=DEBUG` for a verbose mode useful while testing: every incoming message and
+every reply gets logged with chat and user context (id, username, chat type/title), e.g.:
+
+```
+DEBUG fairsharebot.activity: <- chat_id=-100123 type=group title='Trip friends' | user_id=42 username=@alice name='Alice' | text='/pay 20 taxi for @bob'
+DEBUG fairsharebot.activity: -> chat_id=-100123 type=group title='Trip friends' | user_id=42 username=@alice name='Alice' | reply='Recorded: 20.00 for taxi\nSplit equally among: Alice, Bob'
+```
+
+This only affects FairSharebot's own logger - `python-telegram-bot`'s transport-level DEBUG
+logging (raw HTTP requests, the long-polling loop) stays suppressed regardless, since it fires
+constantly whether or not anyone is actually using the bot and would drown out the useful
+output.
+
 ## Usage
 
 All commands operate on the chat's currently open trip - there's no trip ID to pass around,

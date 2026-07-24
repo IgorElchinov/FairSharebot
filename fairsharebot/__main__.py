@@ -7,6 +7,7 @@ from telegram.ext import Application
 from .config import ConfigError, load_settings
 from .db.init_db import init_db
 from .handlers import register_handlers
+from .logging_conf import configure_logging
 
 
 def main() -> None:
@@ -15,13 +16,7 @@ def main() -> None:
     except ConfigError as exc:
         raise SystemExit(str(exc)) from None
 
-    logging.basicConfig(
-        level=settings.log_level,
-        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
-    )
-    # httpx logs full request URLs at INFO, which would otherwise leak the bot
-    # token (it's part of the URL path) into logs.
-    logging.getLogger("httpx").setLevel(logging.WARNING)
+    configure_logging(settings)
 
     init_db(settings.db_path)
 

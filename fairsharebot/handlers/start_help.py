@@ -3,6 +3,8 @@ from __future__ import annotations
 from telegram import Update
 from telegram.ext import ContextTypes
 
+from ..activity_log import reply
+
 START_MESSAGE = (
     "Hi! I'm FairSharebot.\n\n"
     "I help split shared trip expenses in this chat, no registration needed. "
@@ -27,8 +29,8 @@ HELP_MESSAGE = (
 
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text(START_MESSAGE)
+    await reply(update, START_MESSAGE)
 
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text(HELP_MESSAGE)
+    await reply(update, HELP_MESSAGE)

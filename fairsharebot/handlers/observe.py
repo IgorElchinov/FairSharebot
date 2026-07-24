@@ -4,6 +4,7 @@ from telegram import Update
 from telegram import User as TgUser
 from telegram.ext import ContextTypes
 
+from ..activity_log import log_incoming
 from ..config import Settings
 from ..db.connection import get_connection
 from ..db.users_repo import upsert_chat_user, upsert_user
@@ -32,6 +33,12 @@ def _observed_users(update: Update) -> list[TgUser]:
 
 
 async def observe_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    # Runs for every message (see registration in handlers/__init__.py), so
+    # this is the single place that sees literally every interaction - the
+    # natural place to log all of them, rather than duplicating a log call
+    # in every individual command handler.
+    log_incoming(update)
+
     chat = update.effective_chat
     if chat is None:
         return

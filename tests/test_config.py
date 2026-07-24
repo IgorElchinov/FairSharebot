@@ -18,6 +18,7 @@ def test_load_settings_reads_env_file(tmp_path, monkeypatch):
     monkeypatch.delenv("BOT_TOKEN", raising=False)
     monkeypatch.delenv("DB_PATH", raising=False)
     monkeypatch.delenv("LOG_LEVEL", raising=False)
+    monkeypatch.delenv("LOG_DIR", raising=False)
     env_file = tmp_path / ".env"
     env_file.write_text("BOT_TOKEN=test-token\nDB_PATH=./somewhere.sqlite3\n")
 
@@ -26,3 +27,15 @@ def test_load_settings_reads_env_file(tmp_path, monkeypatch):
     assert settings.bot_token == "test-token"
     assert str(settings.db_path) == "somewhere.sqlite3"
     assert settings.log_level == "INFO"
+    assert str(settings.log_dir) == "logs"
+
+
+def test_load_settings_reads_log_dir_override(tmp_path, monkeypatch):
+    monkeypatch.delenv("BOT_TOKEN", raising=False)
+    monkeypatch.delenv("LOG_DIR", raising=False)
+    env_file = tmp_path / ".env"
+    env_file.write_text("BOT_TOKEN=test-token\nLOG_DIR=./somewhere-else/logs\n")
+
+    settings = load_settings(env_file)
+
+    assert str(settings.log_dir) == "somewhere-else/logs"

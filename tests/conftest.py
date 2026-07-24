@@ -19,8 +19,8 @@ def db_path(tmp_path):
 
 
 @pytest.fixture
-def settings(db_path):
-    return Settings(bot_token="test-token", db_path=db_path, log_level="INFO")
+def settings(db_path, tmp_path):
+    return Settings(bot_token="test-token", db_path=db_path, log_level="INFO", log_dir=tmp_path / "logs")
 
 
 @pytest.fixture
@@ -53,6 +53,7 @@ def update_factory():
         reply_to_user: User | None = None,
         mentioned_users: list[User] | None = None,
         new_chat_members: list[User] | None = None,
+        edited: bool = False,
     ):
         message = MagicMock()
         message.reply_text = AsyncMock()
@@ -77,7 +78,10 @@ def update_factory():
         update.effective_user = user
         update.effective_chat = chat
         update.effective_message = message
-        update.message = message
+        # Real telegram.Update.message is None for edited-message updates -
+        # only effective_message is populated then. Handlers must use
+        # effective_message (see fairsharebot/activity_log.py's reply()).
+        update.message = None if edited else message
 
         context = SimpleNamespace(args=args or [], bot_data={})
         return update, context
