@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 
+from .balance import balance_command
 from .observe import observe_message
+from .payment import pay_command
 from .start_help import help_command, start_command
 from .trip import close_trip_command, start_trip_command
 
@@ -16,3 +18,5 @@ def register_handlers(app: Application) -> None:
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("starttrip", start_trip_command))
     app.add_handler(CommandHandler("closetrip", close_trip_command))
+    app.add_handler(CommandHandler("pay", pay_command))
+    app.add_handler(CommandHandler("balance", balance_command))
