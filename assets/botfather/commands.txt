@@ -1,0 +1,8 @@
+start - Show a welcome message
+help - List all commands and examples
+starttrip - Start a new trip in this chat
+pay - Record a payment (equal, exact, or weighted split)
+balance - Show current balances and a settlement preview
+closetrip - Close the trip and settle up
+trips - List past trips in this chat
+trip - Show the full breakdown for a specific trip

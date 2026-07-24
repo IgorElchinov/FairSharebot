@@ -19,6 +19,9 @@ def main() -> None:
         level=settings.log_level,
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     )
+    # httpx logs full request URLs at INFO, which would otherwise leak the bot
+    # token (it's part of the URL path) into logs.
+    logging.getLogger("httpx").setLevel(logging.WARNING)
 
     init_db(settings.db_path)
 

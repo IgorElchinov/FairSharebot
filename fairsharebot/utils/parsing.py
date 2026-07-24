@@ -18,6 +18,11 @@ USAGE = (
 
 _SPLIT_KEYWORDS = {"for": "equal", "split": "exact", "shares": "shares"}
 
+# Ten million, in cents. Comfortably above any real trip expense; mainly
+# guards against "inf"/huge-exponent input reaching SQLite, which raises
+# OverflowError (not caught anywhere) for Python ints outside its 64-bit range.
+MAX_AMOUNT_CENTS = 10_000_000_00
+
 
 @dataclass(frozen=True)
 class ParsedShare:
@@ -99,12 +104,15 @@ def _parse_amount_cents(token: str) -> int:
     except InvalidOperation as exc:
         raise ParseError(f"'{token}' isn't a valid amount.") from exc
 
-    if amount <= 0:
-        raise ParseError("Amount must be greater than zero.")
+    if not amount.is_finite() or amount <= 0:
+        raise ParseError("Amount must be a finite number greater than zero.")
 
     cents_decimal = amount * 100
     if cents_decimal != cents_decimal.to_integral_value():
         raise ParseError("Amounts can have at most 2 decimal places.")
+
+    if cents_decimal > MAX_AMOUNT_CENTS:
+        raise ParseError(f"Amount can't exceed {format_cents(MAX_AMOUNT_CENTS)}.")
 
     return int(cents_decimal)
 
@@ -141,8 +149,10 @@ def _parse_ref_value_pairs(tokens: list[str]) -> list[tuple[str, Decimal]]:
             value = Decimal(value_token)
         except InvalidOperation as exc:
             raise InvalidSplitError(f"'{value_token}' isn't a valid number.") from exc
-        if value <= 0:
-            raise InvalidSplitError(f"The amount for '{ref_token}' must be greater than zero.")
+        if not value.is_finite() or value <= 0:
+            raise InvalidSplitError(
+                f"The amount for '{ref_token}' must be a finite number greater than zero."
+            )
 
         pairs.append((ref, value))
 

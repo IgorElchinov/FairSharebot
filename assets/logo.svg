@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" fill="#14b8a6"/>
+
+  <!-- Three equal wedges with gaps: a "fair split" pie -->
+  <g fill="#ffffff">
+    <path d="M256,256 L86.415,244.141 A170,170 0 0,1 330.523,103.205 Z"/>
+    <path d="M256,256 L351.063,115.064 A170,170 0 0,1 351.063,396.936 Z"/>
+    <path d="M256,256 L330.523,408.795 A170,170 0 0,1 86.415,267.859 Z"/>
+  </g>
+</svg>

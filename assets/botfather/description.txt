@@ -1,0 +1,1 @@
+FairSharebot splits shared trip expenses with zero setup. Add it to a group, start a trip, log payments as you go, and it works out the fewest payments needed to settle up. No registration, no spreadsheets - just /starttrip, /pay, and /closetrip.

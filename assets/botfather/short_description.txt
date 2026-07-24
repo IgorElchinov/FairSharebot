@@ -1,0 +1,1 @@
+Split shared trip expenses with your group - no registration, just /starttrip, /pay, and /closetrip.

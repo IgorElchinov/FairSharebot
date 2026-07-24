@@ -139,3 +139,31 @@ def test_shares_split_uneven_weights_reconcile_exactly():
 def test_shares_split_bad_weight_raises():
     with pytest.raises(InvalidSplitError):
         parse_pay_command(_FakeMessage("/pay 90 rent shares me=1 @alice=-1"))
+
+
+@pytest.mark.parametrize("token", ["inf", "Infinity", "-inf", "+inf"])
+def test_infinite_amount_raises_cleanly(token):
+    with pytest.raises(ParseError):
+        parse_pay_command(_FakeMessage(f"/pay {token} taxi"))
+
+
+def test_amount_over_max_raises():
+    with pytest.raises(ParseError):
+        parse_pay_command(_FakeMessage("/pay 1e20 taxi"))
+
+
+def test_amount_at_max_is_accepted():
+    parsed = parse_pay_command(_FakeMessage("/pay 10000000 taxi"))
+    assert parsed.amount_cents == 1_000_000_000
+
+
+@pytest.mark.parametrize("token", ["inf", "Infinity", "-inf"])
+def test_infinite_exact_split_value_raises_cleanly(token):
+    with pytest.raises(InvalidSplitError):
+        parse_pay_command(_FakeMessage(f"/pay 90 dinner split me={token} @alice=10"))
+
+
+@pytest.mark.parametrize("token", ["inf", "Infinity"])
+def test_infinite_shares_weight_raises_cleanly(token):
+    with pytest.raises(InvalidSplitError):
+        parse_pay_command(_FakeMessage(f"/pay 90 rent shares me={token} @alice=1"))
