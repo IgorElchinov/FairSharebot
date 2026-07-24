@@ -54,3 +54,14 @@ def resolve_participants(
         participants[resolved.id] = resolved
 
     return list(participants.values())
+
+
+def resolve_ref(conn: sqlite3.Connection, *, chat_id: int, sender: TgUser, ref: str) -> User:
+    """Resolves a single exact/shares split reference: "me" or a known @username."""
+    if ref == "me":
+        return _ensure_user(conn, chat_id, sender)
+
+    resolved = resolve_username(conn, chat_id=chat_id, username=ref)
+    if resolved is None:
+        raise UnknownUserError(ref)
+    return resolved

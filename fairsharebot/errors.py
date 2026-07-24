@@ -25,3 +25,8 @@ class UnknownUserError(FairShareError):
 
 class ParseError(FairShareError):
     """Raised when a command's text doesn't match its expected grammar."""
+
+
+class InvalidSplitError(ParseError):
+    """Raised when an exact/shares split doesn't validate (bad ref, non-positive
+    value, duplicate participant, or amounts that don't sum to the payment total)."""

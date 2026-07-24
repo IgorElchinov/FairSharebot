@@ -13,11 +13,15 @@ START_MESSAGE = (
 HELP_MESSAGE = (
     "FairSharebot commands:\n\n"
     "/starttrip [name] - start a new trip in this chat\n"
-    "/pay <amount> <description> for @user1 @user2 - record an equal-split payment\n"
+    "/pay <amount> <description> for @user1 @user2 - equal split\n"
+    "/pay <amount> <description> split me=30 @alice=30 @bob=30 - exact amounts\n"
+    "/pay <amount> <description> shares me=1 @alice=1 @bob=2 - weighted split\n"
     "/balance - show current balances for the open trip\n"
     "/closetrip - close the trip and settle up\n"
     "/trips - list past trips in this chat\n\n"
-    "More payment styles (exact amounts, weighted shares) are coming soon."
+    "Tip: reply to someone's message with /pay to include them without @mentioning.\n"
+    "Note: exact/weighted splits need 'me' or '@username' - people without a "
+    "username can only be included via the equal-split 'for' form."
 )
 
 
