@@ -9,7 +9,7 @@
 </p>
 
 Add it to a group chat, start a trip, log payments as they happen, and close the trip when
-you're done. FairSharebot works out the fewest payments needed to settle everyone up.
+you're done. FairSharebot (@fair_share_bot) works out the fewest payments needed to settle everyone up.
 
 This project is vibe-coded. [See VIBECODING.md for more details.](vibecoding/VIBECODING.md)
 The implementation plan lives in [vibecoding/PLAN.md](vibecoding/PLAN.md).
@@ -86,7 +86,7 @@ Message **@BotFather** to finish setting the bot up:
 
 - `/setuserpic` - upload [`assets/logo.png`](assets/logo.png)
 - `/setdescription` - paste [`assets/botfather/description.txt`](assets/botfather/description.txt)
-- `/setshortdescription` - paste [`assets/botfather/short_description.txt`](assets/botfather/short_description.txt)
+<!-- - `/setshortdescription` - paste [`assets/botfather/short_description.txt`](assets/botfather/short_description.txt) -->
 - `/setabouttext` - paste [`assets/botfather/about.txt`](assets/botfather/about.txt)
 - `/setcommands` - paste [`assets/botfather/commands.txt`](assets/botfather/commands.txt) verbatim,
   so Telegram shows the `/` command menu with descriptions
