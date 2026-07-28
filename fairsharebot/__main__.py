@@ -24,8 +24,17 @@ def main() -> None:
     app.bot_data["settings"] = settings
     register_handlers(app)
 
-    logging.getLogger(__name__).info("FairSharebot starting (polling)...")
-    app.run_polling()
+    if settings.webhook_url:
+        logging.getLogger(__name__).info("FairSharebot starting (webhook)...")
+        app.run_webhook(
+            listen="0.0.0.0",
+            port=settings.port,
+            url_path=settings.bot_token,
+            webhook_url=f"{settings.webhook_url.rstrip('/')}/{settings.bot_token}",
+        )
+    else:
+        logging.getLogger(__name__).info("FairSharebot starting (polling)...")
+        app.run_polling()
 
 
 if __name__ == "__main__":
