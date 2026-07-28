@@ -3,6 +3,7 @@ from __future__ import annotations
 import sqlite3
 from datetime import datetime, timezone
 
+from ..errors import PaymentNotFoundError
 from ..models import Payment, PaymentSplit, SplitInput
 
 
@@ -63,6 +64,22 @@ def add_splits(conn: sqlite3.Connection, *, payment_id: int, splits: list[SplitI
         """,
         [(payment_id, split.user_id, split.weight, split.computed_amount_cents) for split in splits],
     )
+
+
+def get_payment(conn: sqlite3.Connection, payment_id: int) -> Payment | None:
+    row = conn.execute(
+        "SELECT * FROM payments WHERE id = ? AND deleted_at IS NULL",
+        (payment_id,),
+    ).fetchone()
+    return _row_to_payment(row) if row else None
+
+
+def cancel_payment(conn: sqlite3.Connection, payment_id: int) -> Payment:
+    payment = get_payment(conn, payment_id)
+    if payment is None:
+        raise PaymentNotFoundError(payment_id)
+    conn.execute("UPDATE payments SET deleted_at = ? WHERE id = ?", (_now(), payment_id))
+    return payment
 
 
 def get_trip_payments(conn: sqlite3.Connection, trip_id: int) -> list[Payment]:

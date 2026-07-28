@@ -7,9 +7,10 @@ approach, the settlement algorithm, and the phased build order).
 
 Phases 0-6 of the plan are done: trip lifecycle, all three `/pay` split types (equal, exact,
 weighted), balances, final settlement, trip history, and polish (error handler, input
-validation, logging, branding). Remaining work is the explicitly-deferred future list at the
-end of PLAN.md (reminders, `/cancelpayment`, payer override, receipt OCR, multi-currency) -
-nothing there is started.
+validation, logging, branding). `/cancelpayment` (soft-delete via the `payments.deleted_at`
+column reserved for it in the schema) has also been built ahead of its originally-planned
+phase. Remaining work is the rest of the explicitly-deferred future list at the end of
+PLAN.md (reminders, payer override, receipt OCR, multi-currency) - nothing there is started.
 
 ## Stack
 

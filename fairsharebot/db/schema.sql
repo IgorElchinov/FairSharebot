@@ -41,8 +41,7 @@ CREATE TABLE IF NOT EXISTS payments (
   split_type    TEXT NOT NULL CHECK (split_type IN ('equal', 'exact', 'shares')),
   created_by    INTEGER NOT NULL REFERENCES users(telegram_user_id),
   created_at    TEXT NOT NULL,
-  deleted_at    TEXT   -- unused in MVP; reserved so a future /cancelpayment
-                        -- needs no schema migration (queries filter WHERE deleted_at IS NULL)
+  deleted_at    TEXT   -- set by /cancelpayment; queries filter WHERE deleted_at IS NULL
 );
 CREATE INDEX IF NOT EXISTS idx_payments_trip ON payments(trip_id);
 

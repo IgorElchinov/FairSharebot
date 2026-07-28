@@ -5,7 +5,7 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters
 from .balance import balance_command
 from .error import handle_error
 from .observe import observe_message
-from .payment import pay_command
+from .payment import cancel_payment_command, pay_command
 from .start_help import help_command, start_command
 from .trip import close_trip_command, list_trips_command, start_trip_command, trip_detail_command
 
@@ -25,6 +25,7 @@ def register_handlers(app: Application) -> None:
     app.add_handler(CommandHandler("starttrip", start_trip_command))
     app.add_handler(CommandHandler("closetrip", close_trip_command))
     app.add_handler(CommandHandler("pay", pay_command))
+    app.add_handler(CommandHandler(["cancelpayment", "cansel"], cancel_payment_command))
     app.add_handler(CommandHandler("balance", balance_command))
     app.add_handler(CommandHandler("trips", list_trips_command))
     app.add_handler(CommandHandler("trip", trip_detail_command))

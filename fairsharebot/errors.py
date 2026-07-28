@@ -30,3 +30,9 @@ class ParseError(FairShareError):
 class InvalidSplitError(ParseError):
     """Raised when an exact/shares split doesn't validate (bad ref, non-positive
     value, duplicate participant, or amounts that don't sum to the payment total)."""
+
+
+class PaymentNotFoundError(FairShareError):
+    def __init__(self, payment_id: int) -> None:
+        self.payment_id = payment_id
+        super().__init__(f"No such payment: {payment_id}")

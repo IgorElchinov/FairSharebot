@@ -3,7 +3,14 @@ from __future__ import annotations
 import pytest
 
 from fairsharebot.db.connection import get_connection
-from fairsharebot.db.payments_repo import add_payment, add_splits, get_trip_payments, get_trip_splits
+from fairsharebot.db.payments_repo import (
+    add_payment,
+    add_splits,
+    cancel_payment,
+    get_payment,
+    get_trip_payments,
+    get_trip_splits,
+)
 from fairsharebot.db.trips_repo import (
     close_trip,
     create_trip,
@@ -12,7 +19,7 @@ from fairsharebot.db.trips_repo import (
     list_trips_with_totals,
 )
 from fairsharebot.db.users_repo import get_user, resolve_username, upsert_chat_user, upsert_user
-from fairsharebot.errors import NoOpenTripError, TripAlreadyOpenError
+from fairsharebot.errors import NoOpenTripError, PaymentNotFoundError, TripAlreadyOpenError
 from fairsharebot.models import SplitInput
 
 
@@ -215,3 +222,64 @@ def test_list_trips_with_totals(db_path):
 def test_list_trips_with_totals_empty_for_unknown_chat(db_path):
     with get_connection(db_path) as conn:
         assert list_trips_with_totals(conn, 999) == []
+
+
+def test_cancel_payment_excludes_it_from_trip_payments_and_splits(db_path):
+    with get_connection(db_path) as conn:
+        upsert_user(conn, user_id=1, username="alice", display_name="Alice")
+        upsert_user(conn, user_id=2, username="bob", display_name="Bob")
+        trip = create_trip(conn, chat_id=100, name="Trip A", created_by=1)
+
+        payment = add_payment(
+            conn,
+            trip_id=trip.id,
+            payer_id=1,
+            amount_cents=1000,
+            description="taxi",
+            split_type="equal",
+            created_by=1,
+        )
+        add_splits(
+            conn,
+            payment_id=payment.id,
+            splits=[
+                SplitInput(user_id=1, computed_amount_cents=500),
+                SplitInput(user_id=2, computed_amount_cents=500),
+            ],
+        )
+
+    with get_connection(db_path) as conn:
+        cancelled = cancel_payment(conn, payment.id)
+
+    assert cancelled.id == payment.id
+
+    with get_connection(db_path) as conn:
+        assert get_payment(conn, payment.id) is None
+        assert get_trip_payments(conn, trip.id) == []
+        assert get_trip_splits(conn, trip.id) == []
+
+
+def test_cancel_payment_unknown_id_raises(db_path):
+    with get_connection(db_path) as conn:
+        with pytest.raises(PaymentNotFoundError):
+            cancel_payment(conn, 999)
+
+
+def test_cancel_payment_twice_raises_second_time(db_path):
+    with get_connection(db_path) as conn:
+        upsert_user(conn, user_id=1, username="alice", display_name="Alice")
+        trip = create_trip(conn, chat_id=100, name="Trip A", created_by=1)
+        payment = add_payment(
+            conn,
+            trip_id=trip.id,
+            payer_id=1,
+            amount_cents=1000,
+            description="taxi",
+            split_type="equal",
+            created_by=1,
+        )
+
+    with get_connection(db_path) as conn:
+        cancel_payment(conn, payment.id)
+        with pytest.raises(PaymentNotFoundError):
+            cancel_payment(conn, payment.id)

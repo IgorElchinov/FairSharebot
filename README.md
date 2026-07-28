@@ -64,6 +64,7 @@ since only one trip can be open per chat at a time.
 | `/pay` (equal split) | `/pay 90 taxi for @alice @bob` | Payer = you; split evenly among you + mentions |
 | `/pay` (exact amounts) | `/pay 90 dinner split me=30 @alice=30 @bob=30` | Amounts must sum to the total |
 | `/pay` (weighted split) | `/pay 90 rent shares me=1 @alice=1 @bob=2` | Split proportionally to weights |
+| `/cansel <id>` (or `/cancelpayment <id>`) | `/cansel 4` | Undoes a payment (see `/trip <id>` for payment ids) |
 | `/balance` | `/balance` | Current balances + a live settlement preview |
 | `/closetrip` | `/closetrip` | Closes the trip and posts the final settlement |
 | `/trips` | `/trips` | Lists past trips in this chat, with totals |

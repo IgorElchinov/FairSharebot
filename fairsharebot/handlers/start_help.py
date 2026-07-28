@@ -18,6 +18,7 @@ HELP_MESSAGE = (
     "/pay <amount> <description> for @user1 @user2 - equal split\n"
     "/pay <amount> <description> split me=30 @alice=30 @bob=30 - exact amounts\n"
     "/pay <amount> <description> shares me=1 @alice=1 @bob=2 - weighted split\n"
+    "/cansel <id> (or /cancelpayment <id>) - undo a payment (see /trip <id> for payment ids)\n"
     "/balance - show current balances for the open trip\n"
     "/closetrip - close the trip and settle up\n"
     "/trips - list past trips in this chat\n"

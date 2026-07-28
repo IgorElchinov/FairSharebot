@@ -9,7 +9,7 @@ from telegram.ext import ContextTypes
 from ..activity_log import reply
 from ..config import Settings
 from ..db.connection import get_connection
-from ..db.payments_repo import add_payment, add_splits
+from ..db.payments_repo import add_payment, add_splits, cancel_payment, get_payment
 from ..db.trips_repo import get_open_trip
 from ..errors import InvalidSplitError, ParseError, UnknownUserError
 from ..identity import resolve_participants, resolve_ref
@@ -118,3 +118,38 @@ async def pay_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 
     description = parsed.description or "(no description)"
     await reply(update, f"Recorded: {format_cents(parsed.amount_cents)} for {description}\n{summary}")
+
+
+async def cancel_payment_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    settings: Settings = context.bot_data["settings"]
+    chat = update.effective_chat
+
+    if not context.args or not context.args[0].isdigit():
+        await reply(update, "Usage: /cansel <id> - see /trip <id> for payment ids.")
+        return
+
+    payment_id = int(context.args[0])
+
+    with get_connection(settings.db_path) as conn:
+        trip = get_open_trip(conn, chat.id)
+        if trip is None:
+            await reply(update, "There's no open trip in this chat. Start one with /starttrip.")
+            return
+
+        payment = get_payment(conn, payment_id)
+        if payment is None or payment.trip_id != trip.id:
+            await reply(
+                update,
+                f"No payment #{payment_id} found in the current trip - see /trip {trip.id} "
+                "for the list of payments.",
+            )
+            return
+
+        cancel_payment(conn, payment_id)
+
+    description = payment.description or "(no description)"
+    await reply(
+        update,
+        f"Cancelled payment #{payment_id}: {format_cents(payment.amount_cents)} for {description}. "
+        "Balances have been updated.",
+    )

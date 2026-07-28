@@ -3,7 +3,7 @@ from __future__ import annotations
 from fairsharebot.db.connection import get_connection
 from fairsharebot.db.payments_repo import get_trip_payments, get_trip_splits
 from fairsharebot.db.trips_repo import get_open_trip
-from fairsharebot.handlers.payment import pay_command
+from fairsharebot.handlers.payment import cancel_payment_command, pay_command
 from fairsharebot.handlers.trip import start_trip_command
 from fairsharebot.settlement import compute_balances
 
@@ -356,3 +356,109 @@ async def test_pay_works_on_edited_message(db_path, settings, update_factory, us
         payments = get_trip_payments(conn, trip.id)
 
     assert len(payments) == 1
+
+
+async def test_cancel_payment_removes_it_from_balances(
+    db_path, settings, update_factory, user_factory, chat_factory
+):
+    alice = user_factory(1, username="alice")
+    bob = user_factory(2, username="bob")
+    chat = chat_factory(100)
+
+    await _start_trip(settings, update_factory, alice, chat)
+
+    pay_update, pay_context = update_factory(user=alice, chat=chat, text="/pay 10 coffee", reply_to_user=bob)
+    pay_context.bot_data["settings"] = settings
+    await pay_command(pay_update, pay_context)
+
+    with get_connection(db_path) as conn:
+        trip = get_open_trip(conn, 100)
+        payment_id = get_trip_payments(conn, trip.id)[0].id
+
+    update, context = update_factory(user=alice, chat=chat, args=[str(payment_id)])
+    context.bot_data["settings"] = settings
+    await cancel_payment_command(update, context)
+
+    reply = update.message.reply_text.call_args[0][0]
+    assert f"cancelled payment #{payment_id}" in reply.lower()
+    assert "10.00" in reply
+
+    with get_connection(db_path) as conn:
+        payments = get_trip_payments(conn, trip.id)
+        splits = get_trip_splits(conn, trip.id)
+
+    assert payments == []
+    assert splits == []
+
+
+async def test_cancel_payment_without_open_trip(db_path, settings, update_factory, user_factory, chat_factory):
+    alice = user_factory(1, username="alice")
+    chat = chat_factory(100)
+    update, context = update_factory(user=alice, chat=chat, args=["1"])
+    context.bot_data["settings"] = settings
+
+    await cancel_payment_command(update, context)
+
+    reply = update.message.reply_text.call_args[0][0]
+    assert "no open trip" in reply.lower()
+
+
+async def test_cancel_payment_invalid_id(db_path, settings, update_factory, user_factory, chat_factory):
+    alice = user_factory(1, username="alice")
+    chat = chat_factory(100)
+
+    await _start_trip(settings, update_factory, alice, chat)
+
+    update, context = update_factory(user=alice, chat=chat, args=["notanid"])
+    context.bot_data["settings"] = settings
+
+    await cancel_payment_command(update, context)
+
+    reply = update.message.reply_text.call_args[0][0]
+    assert "usage" in reply.lower()
+
+
+async def test_cancel_payment_unknown_id_in_open_trip(
+    db_path, settings, update_factory, user_factory, chat_factory
+):
+    alice = user_factory(1, username="alice")
+    chat = chat_factory(100)
+
+    await _start_trip(settings, update_factory, alice, chat)
+
+    update, context = update_factory(user=alice, chat=chat, args=["999"])
+    context.bot_data["settings"] = settings
+
+    await cancel_payment_command(update, context)
+
+    reply = update.message.reply_text.call_args[0][0]
+    assert "no payment #999" in reply.lower()
+
+
+async def test_cancel_payment_from_other_chats_trip_is_rejected(
+    db_path, settings, update_factory, user_factory, chat_factory
+):
+    alice = user_factory(1, username="alice")
+    chat_a = chat_factory(100)
+    chat_b = chat_factory(200)
+
+    await _start_trip(settings, update_factory, alice, chat_a)
+    pay_update, pay_context = update_factory(user=alice, chat=chat_a, text="/pay 10 coffee")
+    pay_context.bot_data["settings"] = settings
+    await pay_command(pay_update, pay_context)
+
+    with get_connection(db_path) as conn:
+        trip_a = get_open_trip(conn, 100)
+        payment_id = get_trip_payments(conn, trip_a.id)[0].id
+
+    await _start_trip(settings, update_factory, alice, chat_b)
+
+    update, context = update_factory(user=alice, chat=chat_b, args=[str(payment_id)])
+    context.bot_data["settings"] = settings
+    await cancel_payment_command(update, context)
+
+    reply = update.message.reply_text.call_args[0][0]
+    assert f"no payment #{payment_id}" in reply.lower()
+
+    with get_connection(db_path) as conn:
+        assert get_trip_payments(conn, trip_a.id) != []

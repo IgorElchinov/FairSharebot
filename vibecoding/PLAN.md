@@ -186,8 +186,9 @@ FairSharebot Implementation Plan
  └────────────────────┴──────────────────────────────────────────────┴────────────────────────────────────────────────────────────────┘
 
  Deferred/out of scope (documented in /help and code, not built now): payer
- override (paidby=), /cancelpayment (schema already supports it via
- deleted_at), reminders, receipt OCR, multi-currency conversion.
+ override (paidby=), reminders, receipt OCR, multi-currency conversion.
+ (/cancelpayment, originally planned for this deferred list, was built ahead
+ of schedule using the deleted_at column reserved for it below.)
 
  Settlement algorithm (settlement.py, pure functions, no I/O)
 
@@ -235,7 +236,7 @@ losetrip (final); invariant tests.
  6. Polish — real /help examples, error handler, input validation, README
  usage walkthrough, .gitignore for .env/*.sqlite3.
  7. Future (TODOs only, not built now) — reminders via JobQueue +
-ttlements table, /cancelpayment, payer override, receipt OCR,
+ttlements table, payer override, receipt OCR,
  multi-currency, provably-optimal settlement for large groups.
 
 itical files

@@ -125,7 +125,9 @@ async def trip_detail_command(update: Update, context: ContextTypes.DEFAULT_TYPE
         for payment in payments:
             payer_name = names[payment.payer_id]
             description = payment.description or "(no description)"
-            lines.append(f"- {payer_name} paid {format_cents(payment.amount_cents)} for {description}")
+            lines.append(
+                f"- #{payment.id} {payer_name} paid {format_cents(payment.amount_cents)} for {description}"
+            )
 
         lines.append("")
         lines.append("Settlement:")
