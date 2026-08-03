@@ -1,9 +1,14 @@
 start - Show a welcome message
 help - List all commands and examples
 starttrip - Start a new trip in this chat
+starttriptoken - Start a trip that settles automatically on-chain
 pay - Record a payment (equal, exact, or weighted split)
 cansel - Undo a payment (see /trip <id> for its id)
 balance - Show current balances and a settlement preview
 closetrip - Close the trip and settle up
 trips - List past trips in this chat
 trip - Show the full breakdown for a specific trip
+walletbalance - Show your token-mode wallet's balance
+linkwallet - Link your own wallet instead of the auto-created one
+exportkey - Reveal your auto-created wallet's private key (DM only)
+minttoken - Operator only: mint tokens to someone's wallet

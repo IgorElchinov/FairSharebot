@@ -7,6 +7,7 @@ from telegram import User as TgUser
 from telegram.ext import ContextTypes
 
 from ..activity_log import reply
+from ..chain.settlement_service import settle_payment_onchain
 from ..config import Settings
 from ..db.connection import get_connection
 from ..db.payments_repo import add_payment, add_splits, cancel_payment, get_payment
@@ -116,8 +117,26 @@ async def pay_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         )
         add_splits(conn, payment_id=payment.id, splits=splits)
 
+        onchain_note = ""
+        if trip.settlement_mode == "token" and settings.chain is not None:
+            chain_client = context.bot_data["chain_client"]
+            try:
+                await settle_payment_onchain(
+                    conn,
+                    chain_client,
+                    settings.chain,
+                    mnemonic=settings.chain.wallet_master_mnemonic,
+                    payment=payment,
+                    splits=splits,
+                )
+            except Exception:
+                # Chain issues must never lose the off-chain record, which
+                # stays authoritative regardless - /closetrip's safety net
+                # will retry whatever didn't settle here.
+                onchain_note = "\n(on-chain settlement hit an error - /closetrip will retry it)"
+
     description = parsed.description or "(no description)"
-    await reply(update, f"Recorded: {format_cents(parsed.amount_cents)} for {description}\n{summary}")
+    await reply(update, f"Recorded: {format_cents(parsed.amount_cents)} for {description}\n{summary}{onchain_note}")
 
 
 async def cancel_payment_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:

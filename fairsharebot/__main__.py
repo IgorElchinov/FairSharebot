@@ -22,6 +22,18 @@ def main() -> None:
 
     app = Application.builder().token(settings.bot_token).build()
     app.bot_data["settings"] = settings
+    if settings.chain is not None:
+        # Imported lazily so a cash-only deployment (chain=None, the default)
+        # never pays the cost of importing web3/eth_account at all.
+        from .chain.client import Web3ChainClient
+
+        app.bot_data["chain_client"] = Web3ChainClient(
+            rpc_url=settings.chain.rpc_url,
+            token_address=settings.chain.token_address,
+            settlement_address=settings.chain.settlement_address,
+            relayer_private_key=settings.chain.relayer_private_key,
+            owner_private_key=settings.chain.owner_private_key,
+        )
     register_handlers(app)
 
     if settings.webhook_url:

@@ -1,2 +1,10 @@
-python-telegram-bot>=21,<22
+python-telegram-bot[job-queue]>=21,<22
 python-dotenv>=1.0,<2
+web3>=6,<7
+eth-account>=0.11,<1
+
+# Only needed to run the standalone /linkwallet signing-page web app
+# (python -m fairsharebot.webapp) - not imported by the bot process itself.
+fastapi>=0.110,<1
+uvicorn>=0.29,<1
+httpx>=0.27,<1

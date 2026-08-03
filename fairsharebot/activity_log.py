@@ -38,14 +38,19 @@ def log_incoming(update: Update) -> None:
     logger.debug("<- %s | %s | text=%r", _chat_label(chat), _user_label(user), text)
 
 
-async def reply(update: Update, text: str) -> None:
+async def reply(update: Update, text: str, *, redact: bool = False) -> None:
     """Sends a reply and logs it at DEBUG level.
 
     Uses effective_message rather than update.message: update.message is None
     for edited-message updates, which previously crashed every handler that
     called update.message.reply_text(...) directly on an edited command.
+
+    Pass redact=True for any reply that can contain a secret (e.g.
+    /exportkey's private key) - the message still sends normally, it just
+    never reaches the log file, including under LOG_LEVEL=DEBUG.
     """
     chat = update.effective_chat
     user = update.effective_user
-    logger.debug("-> %s | %s | reply=%r", _chat_label(chat), _user_label(user), text)
+    logged_text = "<redacted>" if redact else text
+    logger.debug("-> %s | %s | reply=%r", _chat_label(chat), _user_label(user), logged_text)
     await update.effective_message.reply_text(text)

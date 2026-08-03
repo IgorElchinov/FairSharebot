@@ -21,6 +21,8 @@ def _row_to_trip(row: sqlite3.Row) -> Trip:
         created_by=row["created_by"],
         created_at=row["created_at"],
         closed_at=row["closed_at"],
+        settlement_mode=row["settlement_mode"],
+        token_address=row["token_address"],
     )
 
 
@@ -37,13 +39,24 @@ def get_trip(conn: sqlite3.Connection, trip_id: int) -> Trip | None:
     return _row_to_trip(row) if row else None
 
 
-def create_trip(conn: sqlite3.Connection, *, chat_id: int, name: str, created_by: int) -> Trip:
+def create_trip(
+    conn: sqlite3.Connection,
+    *,
+    chat_id: int,
+    name: str,
+    created_by: int,
+    settlement_mode: str = "cash",
+    token_address: str | None = None,
+) -> Trip:
     if get_open_trip(conn, chat_id) is not None:
         raise TripAlreadyOpenError(chat_id)
 
     cursor = conn.execute(
-        "INSERT INTO trips (chat_id, name, created_by, created_at) VALUES (?, ?, ?, ?)",
-        (chat_id, name, created_by, _now()),
+        """
+        INSERT INTO trips (chat_id, name, created_by, created_at, settlement_mode, token_address)
+        VALUES (?, ?, ?, ?, ?, ?)
+        """,
+        (chat_id, name, created_by, _now(), settlement_mode, token_address),
     )
     trip = get_trip(conn, cursor.lastrowid)
     assert trip is not None

@@ -25,7 +25,12 @@ HELP_MESSAGE = (
     "/trip <id> - see the full breakdown for a specific trip\n\n"
     "Tip: reply to someone's message with /pay to include them without @mentioning.\n"
     "Note: exact/weighted splits need 'me' or '@username' - people without a "
-    "username can only be included via the equal-split 'for' form."
+    "username can only be included via the equal-split 'for' form.\n\n"
+    "If this bot has crypto payments configured:\n"
+    "/starttriptoken [name] - start a trip that settles automatically on-chain\n"
+    "/walletbalance - show your token-mode wallet's balance\n"
+    "/linkwallet - link your own wallet instead of the auto-created one\n"
+    "/exportkey - reveal your auto-created wallet's private key (DM only)"
 )
 
 

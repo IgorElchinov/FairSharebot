@@ -36,3 +36,19 @@ class PaymentNotFoundError(FairShareError):
     def __init__(self, payment_id: int) -> None:
         self.payment_id = payment_id
         super().__init__(f"No such payment: {payment_id}")
+
+
+class NoWalletError(FairShareError):
+    """Raised when a token-mode operation needs a wallet a user doesn't have yet."""
+
+    def __init__(self, user_id: int) -> None:
+        self.user_id = user_id
+        super().__init__(f"No wallet on file for user {user_id}")
+
+
+class NoCustodialWalletError(FairShareError):
+    """Raised by /exportkey when a user has never had a custodial wallet derived."""
+
+    def __init__(self, user_id: int) -> None:
+        self.user_id = user_id
+        super().__init__(f"No custodial wallet was ever derived for user {user_id}")
